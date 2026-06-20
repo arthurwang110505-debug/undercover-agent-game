@@ -1,0 +1,961 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>誰是臥底 - 派對傳閱版</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #131130 0%, #240a32 100%);
+        }
+        /* 備用流暢動畫 */
+        .card-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col justify-between p-4 overflow-x-hidden selection:bg-purple-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="text-center py-4">
+        <h1 class="text-3xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-mask"></i> 誰是臥底 <span class="text-xs px-2 py-1 bg-purple-900/80 text-purple-200 border border-purple-500 rounded-full">傳閱版</span>
+        </h1>
+        <p class="text-xs text-slate-400 mt-1">一隻手機，全場同樂！</p>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow flex flex-col justify-center max-w-md w-full mx-auto my-2">
+
+        <!-- STEP 1: Game Setup Screen -->
+        <section id="screen-setup" class="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
+            <div class="text-center">
+                <h2 class="text-xl font-bold text-slate-200">遊戲設定</h2>
+                <p class="text-xs text-slate-400 mt-1">請設定玩家人數與詞彙</p>
+            </div>
+
+            <!-- Settings Form -->
+            <div class="space-y-4">
+                <!-- Players Count -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2 flex justify-between">
+                        <span>玩家人數</span>
+                        <span id="label-player-count" class="text-purple-400 font-bold">6 人</span>
+                    </label>
+                    <input type="range" id="input-player-count" min="4" max="12" value="6" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                    <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                        <span>4人</span>
+                        <span>8人</span>
+                        <span>12人</span>
+                    </div>
+                </div>
+
+                <!-- Undercover Count -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2 flex justify-between">
+                        <span>臥底人數</span>
+                        <span id="label-undercover-count" class="text-pink-400 font-bold">1 人</span>
+                    </label>
+                    <input type="range" id="input-undercover-count" min="1" max="3" value="1" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-pink-500">
+                    <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                        <span>1人</span>
+                        <span>2人</span>
+                        <span>3人</span>
+                    </div>
+                </div>
+
+                <!-- Mr. White (Blank Card) Custom Button Switch -->
+                <div id="btn-toggle-white" class="flex items-center justify-between bg-slate-950/60 p-3.5 rounded-2xl border border-slate-800 cursor-pointer active:scale-[0.98] transition-all">
+                    <div class="pointer-events-none">
+                        <span class="text-sm font-bold text-slate-300 block">加入「白板/白癡」角色</span>
+                        <span class="text-[10px] text-slate-400">白板拿到的詞是一張空白牌，必須純靠聽取別人敘述來猜詞</span>
+                    </div>
+                    <div>
+                        <!-- Custom styled toggle switch -->
+                        <div id="toggle-white-bg" class="w-12 h-6 bg-slate-800 rounded-full relative transition-colors duration-200">
+                            <div id="toggle-white-dot" class="w-5 h-5 bg-slate-400 rounded-full absolute top-0.5 left-0.5 transition-transform duration-200"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Word Source Selector -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">詞彙模式</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="btn-mode-preset" class="py-2.5 px-4 rounded-xl text-sm font-bold border-2 border-purple-500 bg-purple-950/40 text-purple-300 hover:bg-purple-900/20 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-book"></i> 精選內建詞
+                        </button>
+                        <button type="button" id="btn-mode-custom" class="py-2.5 px-4 rounded-xl text-sm font-medium border border-slate-700 bg-slate-800/40 text-slate-400 hover:bg-slate-800/80 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-pen-to-square"></i> 自訂雙詞彙
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preset Categories -->
+                <div id="section-preset" class="space-y-2">
+                    <label class="block text-xs font-medium text-slate-400">選擇主題庫</label>
+                    <select id="select-category" class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                        <option value="all">混合所有主題（最推薦）</option>
+                        <option value="food">美味飲食組</option>
+                        <option value="life">日常生活組</option>
+                        <option value="entertainment">娛樂明星與影視</option>
+                        <option value="compare">趣味對比與反差</option>
+                    </select>
+                </div>
+
+                <!-- Custom Words Input -->
+                <div id="section-custom" class="space-y-3 hidden bg-slate-950/40 p-3 rounded-xl border border-slate-800">
+                    <p class="text-xs text-amber-400"><i class="fa-solid fa-triangle-exclamation"></i> 請在隱密處輸入，或交由不參賽的法官代為輸入：</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">平民詞彙 (多數人)</label>
+                            <input type="text" id="custom-civilian" placeholder="例：火車" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">臥底詞彙 (少數人)</label>
+                            <input type="text" id="custom-undercover" placeholder="例：高鐵" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Player Names configuration -->
+                <div>
+                    <button type="button" id="btn-toggle-names" class="text-xs text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-user-gear"></i> 自訂玩家名字 (可選) <i class="fa-solid fa-chevron-down text-[10px]" id="names-chevron"></i>
+                    </button>
+                    <div id="section-names" class="hidden mt-2 grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1 bg-slate-950/20 rounded-lg">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start Button -->
+            <button type="button" id="btn-start-game" class="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 font-bold rounded-2xl shadow-lg shadow-purple-900/30 active:scale-95 transition-all text-center text-base tracking-widest">
+                確認，開始發牌！
+            </button>
+        </section>
+
+        <!-- STEP 2: Pass & Play Card Distribute Screen -->
+        <section id="screen-distribute" class="hidden bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
+            <div class="text-center space-y-1">
+                <div class="text-xs font-bold text-purple-400 uppercase tracking-widest">發牌階段</div>
+                <h2 class="text-2xl font-black text-slate-100 flex items-center justify-center gap-2">
+                    請將手機交給：<span id="distribute-player-name" class="text-amber-400 underline decoration-wavy underline-offset-4">玩家 1</span>
+                </h2>
+                <p class="text-xs text-slate-400">請確保身邊沒有其他人在偷看喔！</p>
+            </div>
+
+            <!-- Reliable Non-3D Card Container -->
+            <div class="w-full h-64 my-4 cursor-pointer relative rounded-2xl shadow-xl border border-slate-700/50 bg-slate-950/60 overflow-hidden" id="distribute-card-area">
+                
+                <!-- Front Side: Covered state (Always visible first) -->
+                <div id="card-cover-state" class="card-transition absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-slate-950 to-slate-900 text-center space-y-4 opacity-100 scale-100 z-10">
+                    <div class="w-16 h-16 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
+                        <i class="fa-solid fa-lock text-3xl text-purple-400 animate-pulse"></i>
+                    </div>
+                    <div>
+                        <p class="text-base font-bold text-slate-200">點擊按鈕或卡片查看詞彙</p>
+                        <p class="text-xs text-slate-400 mt-1">其他人請轉過身去</p>
+                    </div>
+                </div>
+
+                <!-- Back Side: Revealed state (Hidden by default) -->
+                <div id="card-reveal-state" class="card-transition absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-tr from-slate-900 via-indigo-950/60 to-slate-900 text-center space-y-4 opacity-0 scale-95 pointer-events-none z-0">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                        <i class="fa-solid fa-unlock text-2xl text-emerald-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase tracking-wider">您的專屬詞彙為</p>
+                        <div id="distribute-word-display" class="text-3xl font-black tracking-widest text-emerald-400 my-2.5 drop-shadow-[0_2px_10px_rgba(16,185,129,0.4)]">
+                            <!-- Injected by JS -->
+                        </div>
+                        <div id="distribute-role-tip" class="text-xs text-slate-300 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl inline-block max-w-[90%]">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Control Buttons for Distributing -->
+            <div class="space-y-3">
+                <button type="button" id="btn-reveal-card" class="w-full py-4 bg-purple-600 hover:bg-purple-500 font-bold rounded-2xl shadow-md active:scale-95 transition-all text-center text-sm">
+                    <i class="fa-solid fa-eye mr-2"></i> 我準備好了，查看詞彙
+                </button>
+                <button type="button" id="btn-hide-and-next" class="hidden w-full py-4 bg-emerald-600 hover:bg-emerald-500 font-bold rounded-2xl shadow-md active:scale-95 transition-all text-center text-sm">
+                    <i class="fa-solid fa-eye-slash mr-2"></i> 已記住，蓋牌並交給下一位玩家
+                </button>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div id="distribute-progress" class="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300" style="width: 15%"></div>
+            </div>
+        </section>
+
+        <!-- STEP 3: Game Board Dashboard Screen -->
+        <section id="screen-gameboard" class="hidden bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
+            <!-- Header and Round Info -->
+            <div class="flex justify-between items-center bg-slate-950/40 p-3 rounded-2xl border border-slate-800">
+                <div>
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider">當前進度</span>
+                    <h3 class="text-base font-bold text-slate-200">描述與投票階段</h3>
+                </div>
+                <div class="text-right">
+                    <span id="game-status-text" class="text-xs text-pink-400 font-bold px-2.5 py-1 bg-pink-950/30 border border-pink-900 rounded-lg inline-block">
+                        未開牌
+                    </span>
+                </div>
+            </div>
+
+            <!-- Game instructions -->
+            <div class="p-3 bg-indigo-950/30 border border-indigo-900/50 rounded-xl space-y-1">
+                <h4 class="text-xs font-bold text-indigo-300"><i class="fa-solid fa-circle-info mr-1"></i> 遊戲指南：</h4>
+                <ol class="text-[11px] text-slate-300 list-decimal list-inside space-y-1">
+                    <li>每位存活玩家輪流用<strong>一句話</strong>描述自己的詞（不可講出諧音、英文或本詞）。</li>
+                    <li>全體描述完後，進行<strong>自由討論與拉票</strong>。</li>
+                    <li>全體同時<strong>投票淘汰</strong>一人，並在下方點擊頭像將其淘汰。</li>
+                </ol>
+            </div>
+
+            <!-- Players Grid -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-bold text-slate-400">存活玩家名單 (<span id="alive-count">0</span>/<span id="total-count">0</span>)</span>
+                    <span class="text-[10px] text-slate-500">點擊大頭貼可「淘汰」或「復活」</span>
+                </div>
+                
+                <!-- Dynamic Players List Grid -->
+                <div id="gameboard-players-grid" class="grid grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
+                    <!-- Template for player item (Injected by JS) -->
+                </div>
+            </div>
+
+            <!-- Game actions -->
+            <div class="pt-2 flex gap-2">
+                <button type="button" id="btn-show-words-end" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs border border-slate-700 active:scale-95 transition-all">
+                    <i class="fa-solid fa-eye mr-1"></i> 直接揭曉所有答案
+                </button>
+                <button type="button" id="btn-restart-from-game" class="flex-1 py-3 bg-slate-800/40 hover:bg-slate-800 text-slate-400 font-bold rounded-xl text-xs border border-slate-800 active:scale-95 transition-all">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> 結束並重新設定
+                </button>
+            </div>
+        </section>
+
+        <!-- Custom Alert Modal/Popups -->
+        <div id="modal-alert" class="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-xs w-full text-center space-y-4 shadow-2xl">
+                <div class="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto" id="modal-icon-container">
+                    <i id="modal-icon" class="fa-solid fa-triangle-exclamation text-2xl text-amber-500"></i>
+                </div>
+                <div>
+                    <h3 id="modal-title" class="text-base font-bold text-slate-100">通知</h3>
+                    <p id="modal-message" class="text-xs text-slate-400 mt-1">詳細說明文字在此</p>
+                </div>
+                <button type="button" id="modal-btn-ok" class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-slate-100 font-bold rounded-xl text-sm transition-colors">
+                    我知道了
+                </button>
+            </div>
+        </div>
+
+        <!-- GameOver Screen Overlay/Modal -->
+        <div id="modal-gameover" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 p-6 rounded-3xl max-w-sm w-full text-center space-y-6 shadow-2xl relative overflow-hidden">
+                <!-- Decorative background light -->
+                <div class="absolute -top-12 -left-12 w-32 h-32 bg-purple-600/10 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-pink-600/10 rounded-full blur-3xl"></div>
+
+                <div class="space-y-2 relative">
+                    <div class="text-xs font-bold text-pink-400 uppercase tracking-widest">遊戲結束</div>
+                    <h2 id="gameover-title" class="text-3xl font-black text-slate-100">臥底獲勝！</h2>
+                    <p id="gameover-subtitle" class="text-xs text-slate-400">臥底成功隱藏身分並生存到了最後</p>
+                </div>
+
+                <!-- Word Reveal Section -->
+                <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl space-y-3">
+                    <h4 class="text-xs font-bold text-slate-300 border-b border-slate-800 pb-2">詞彙真相揭曉</h4>
+                    <div class="grid grid-cols-2 gap-2 text-left">
+                        <div class="p-2 bg-slate-950/40 rounded-xl">
+                            <span class="block text-[10px] text-slate-500">平民詞彙</span>
+                            <span id="reveal-word-civilian" class="text-sm font-bold text-emerald-400">水餃</span>
+                        </div>
+                        <div class="p-2 bg-slate-950/40 rounded-xl">
+                            <span class="block text-[10px] text-slate-500">臥底詞彙</span>
+                            <span id="reveal-word-undercover" class="text-sm font-bold text-pink-400">鍋貼</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Roles List Details -->
+                <div class="max-h-44 overflow-y-auto pr-1">
+                    <h4 class="text-left text-xs font-bold text-slate-400 mb-2">玩家身分與結果：</h4>
+                    <div id="gameover-roles-list" class="space-y-1.5">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="space-y-2 pt-2">
+                    <button type="button" id="btn-play-again" class="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-slate-100 font-bold rounded-xl text-sm transition-all shadow-md">
+                        再玩一局 (使用相同設定)
+                    </button>
+                    <button type="button" id="btn-back-setup" class="w-full py-3 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold rounded-xl text-sm transition-all">
+                        返回主畫面設定
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer / Rules Link -->
+    <footer class="text-center py-4 text-[10px] text-slate-500">
+        <p>© 2026 誰是臥底手機同樂版 · 經典社交桌遊</p>
+    </footer>
+
+    <!-- Core Game Logic JavaScript -->
+    <script>
+        // Preset Word Pairs DB - Categorized
+        const wordDatabase = {
+            food: [
+                ["泡麵", "螺螄粉"],
+                ["漢堡", "三明治"],
+                ["可樂", "雪碧"],
+                ["水餃", "鍋貼"],
+                ["牛肉麵", "拉麵"],
+                ["珍珠奶茶", "椰果奶茶"],
+                ["蘋果", "梨子"],
+                ["香蕉", "芭樂"],
+                ["火鍋", "麻辣燙"],
+                ["壽司", "飯糰"],
+                ["肯德基", "麥當勞"],
+                ["西瓜", "哈密瓜"]
+            ],
+            life: [
+                ["雨傘", "雨衣"],
+                ["牙刷", "牙線"],
+                ["鏡子", "梳子"],
+                ["手機", "平板"],
+                ["鉛筆", "原子筆"],
+                ["枕頭", "抱枕"],
+                ["腳踏車", "摩托車"],
+                ["棉花棒", "牙籤"],
+                ["拖鞋", "涼鞋"],
+                ["肥皂", "沐浴乳"],
+                ["耳機", "喇叭"],
+                ["電腦", "筆記型電腦"]
+            ],
+            entertainment: [
+                ["劉德華", "梁朝偉"],
+                ["周杰倫", "王力宏"],
+                ["哈利波特", "魔戒"],
+                ["蜘蛛人", "蝙蝠俠"],
+                ["歌劇魅影", "悲慘世界"],
+                ["林俊傑", "蕭敬騰"],
+                ["海賊王", "火影忍者"],
+                ["蔡依林", "張惠妹"],
+                ["哆啦A夢", "蠟筆小新"],
+                ["名偵探柯南", "金田一"]
+            ],
+            compare: [
+                ["火車", "高鐵"],
+                ["游泳", "潛水"],
+                ["跑步", "競走"],
+                ["看電影", "看電視"],
+                ["微信", "LINE"],
+                ["淘寶", "蝦皮"],
+                ["吉他", "貝斯"],
+                ["鋼琴", "風琴"],
+                ["計程車", "公車"],
+                ["爬山", "攀岩"],
+                ["班導", "教官"],
+                ["理科", "工科"]
+            ]
+        };
+
+        // UI Screens Elements
+        const screenSetup = document.getElementById('screen-setup');
+        const screenDistribute = document.getElementById('screen-distribute');
+        const screenGameBoard = document.getElementById('screen-gameboard');
+
+        // Form Inputs
+        const inputPlayerCount = document.getElementById('input-player-count');
+        const inputUndercoverCount = document.getElementById('input-undercover-count');
+        const labelPlayerCount = document.getElementById('label-player-count');
+        const labelUndercoverCount = document.getElementById('label-undercover-count');
+        
+        // Corrected Toggle White Switch Elements
+        const btnToggleWhite = document.getElementById('btn-toggle-white');
+        const toggleWhiteBg = document.getElementById('toggle-white-bg');
+        const toggleWhiteDot = document.getElementById('toggle-white-dot');
+        
+        const btnModePreset = document.getElementById('btn-mode-preset');
+        const btnModeCustom = document.getElementById('btn-mode-custom');
+        const sectionPreset = document.getElementById('section-preset');
+        const sectionCustom = document.getElementById('section-custom');
+        const selectCategory = document.getElementById('select-category');
+        const customCivilian = document.getElementById('custom-civilian');
+        const customUndercover = document.getElementById('custom-undercover');
+
+        const btnToggleNames = document.getElementById('btn-toggle-names');
+        const sectionNames = document.getElementById('section-names');
+        const namesChevron = document.getElementById('names-chevron');
+
+        const btnStartGame = document.getElementById('btn-start-game');
+
+        // Distribute Screen Elements
+        const distributePlayerName = document.getElementById('distribute-player-name');
+        const distributeCardArea = document.getElementById('distribute-card-area');
+        
+        // Corrected non-3D State Containers
+        const cardCoverState = document.getElementById('card-cover-state');
+        const cardRevealState = document.getElementById('card-reveal-state');
+        
+        const distributeWordDisplay = document.getElementById('distribute-word-display');
+        const distributeRoleTip = document.getElementById('distribute-role-tip');
+        const btnRevealCard = document.getElementById('btn-reveal-card');
+        const btnHideAndNext = document.getElementById('btn-hide-and-next');
+        const distributeProgress = document.getElementById('distribute-progress');
+
+        // Gameboard Elements
+        const gameboardPlayersGrid = document.getElementById('gameboard-players-grid');
+        const aliveCountDisplay = document.getElementById('alive-count');
+        const totalCountDisplay = document.getElementById('total-count');
+        const btnShowWordsEnd = document.getElementById('btn-show-words-end');
+        const btnRestartFromGame = document.getElementById('btn-restart-from-game');
+        const gameStatusText = document.getElementById('game-status-text');
+
+        // Modals
+        const modalAlert = document.getElementById('modal-alert');
+        const modalIcon = document.getElementById('modal-icon');
+        const modalIconContainer = document.getElementById('modal-icon-container');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalBtnOk = document.getElementById('modal-btn-ok');
+
+        const modalGameOver = document.getElementById('modal-gameover');
+        const gameOverTitle = document.getElementById('gameover-title');
+        const gameOverSubtitle = document.getElementById('gameover-subtitle');
+        const revealWordCivilian = document.getElementById('reveal-word-civilian');
+        const revealWordUndercover = document.getElementById('reveal-word-undercover');
+        const gameoverRolesList = document.getElementById('gameover-roles-list');
+        const btnPlayAgain = document.getElementById('btn-play-again');
+        const btnBackSetup = document.getElementById('btn-back-setup');
+
+        // Game State Variables
+        let playerCount = 6;
+        let undercoverCount = 1;
+        let hasMrWhite = false; // Directly managed by button switch
+        let wordMode = 'preset'; // preset or custom
+        let players = []; // Array of Objects: { id, name, word, role: 'civilian'|'undercover'|'white', alive: true }
+        let currentDistributeIndex = 0;
+        let cardRevealed = false;
+        let currentWords = { civilian: "", undercover: "" };
+
+        // Initialize and Event Listeners
+        window.addEventListener('DOMContentLoaded', () => {
+            initSetupControls();
+            generateNameFields();
+        });
+
+        function customAlert(title, message, type = 'warning') {
+            modalTitle.innerText = title;
+            modalMessage.innerText = message;
+            
+            // Style based on type
+            if (type === 'error') {
+                modalIconContainer.className = "w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto";
+                modalIcon.className = "fa-solid fa-triangle-exclamation text-2xl text-red-500";
+            } else if (type === 'success') {
+                modalIconContainer.className = "w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto";
+                modalIcon.className = "fa-solid fa-circle-check text-2xl text-emerald-500";
+            } else {
+                modalIconContainer.className = "w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto";
+                modalIcon.className = "fa-solid fa-triangle-exclamation text-2xl text-amber-500";
+            }
+
+            modalAlert.classList.remove('hidden');
+        }
+
+        modalBtnOk.addEventListener('click', () => {
+            modalAlert.classList.add('hidden');
+        });
+
+        // Step 1: Control Logic for Setup
+        function initSetupControls() {
+            // Slider Listeners
+            inputPlayerCount.addEventListener('input', (e) => {
+                playerCount = parseInt(e.target.value);
+                labelPlayerCount.innerText = `${playerCount} 人`;
+                
+                // Keep undercover logically sound
+                const maxUndercovers = Math.max(1, Math.floor((playerCount - 1) / 2));
+                inputUndercoverCount.max = maxUndercovers;
+                if (parseInt(inputUndercoverCount.value) > maxUndercovers) {
+                    inputUndercoverCount.value = maxUndercovers;
+                    undercoverCount = maxUndercovers;
+                }
+                labelUndercoverCount.innerText = `${inputUndercoverCount.value} 人`;
+
+                generateNameFields();
+            });
+
+            inputUndercoverCount.addEventListener('input', (e) => {
+                undercoverCount = parseInt(e.target.value);
+                labelUndercoverCount.innerText = `${undercoverCount} 人`;
+            });
+
+            // Reliable click behavior for White/Blank card toggle button
+            btnToggleWhite.addEventListener('click', () => {
+                hasMrWhite = !hasMrWhite;
+                
+                // Visual update
+                if (hasMrWhite) {
+                    toggleWhiteBg.classList.remove('bg-slate-800');
+                    toggleWhiteBg.classList.add('bg-purple-600');
+                    toggleWhiteDot.style.transform = 'translateX(24px)';
+                    toggleWhiteDot.classList.remove('bg-slate-400');
+                    toggleWhiteDot.classList.add('bg-white');
+                    btnToggleWhite.classList.add('border-purple-500/80', 'bg-purple-950/20');
+                } else {
+                    toggleWhiteBg.classList.remove('bg-purple-600');
+                    toggleWhiteBg.classList.add('bg-slate-800');
+                    toggleWhiteDot.style.transform = 'translateX(0px)';
+                    toggleWhiteDot.classList.remove('bg-white');
+                    toggleWhiteDot.classList.add('bg-slate-400');
+                    btnToggleWhite.classList.remove('border-purple-500/80', 'bg-purple-950/20');
+                }
+            });
+
+            // Toggle Modes
+            btnModePreset.addEventListener('click', () => {
+                wordMode = 'preset';
+                btnModePreset.className = "py-2.5 px-4 rounded-xl text-sm font-bold border-2 border-purple-500 bg-purple-950/40 text-purple-300 hover:bg-purple-900/20 transition-all flex items-center justify-center gap-2";
+                btnModeCustom.className = "py-2.5 px-4 rounded-xl text-sm font-medium border border-slate-700 bg-slate-800/40 text-slate-400 hover:bg-slate-800/80 transition-all flex items-center justify-center gap-2";
+                sectionPreset.classList.remove('hidden');
+                sectionCustom.classList.add('hidden');
+            });
+
+            btnModeCustom.addEventListener('click', () => {
+                wordMode = 'custom';
+                btnModeCustom.className = "py-2.5 px-4 rounded-xl text-sm font-bold border-2 border-purple-500 bg-purple-950/40 text-purple-300 hover:bg-purple-900/20 transition-all flex items-center justify-center gap-2";
+                btnModePreset.className = "py-2.5 px-4 rounded-xl text-sm font-medium border border-slate-700 bg-slate-800/40 text-slate-400 hover:bg-slate-800/80 transition-all flex items-center justify-center gap-2";
+                sectionPreset.classList.add('hidden');
+                sectionCustom.classList.remove('hidden');
+            });
+
+            // Toggle Custom Names display
+            btnToggleNames.addEventListener('click', () => {
+                if (sectionNames.classList.contains('hidden')) {
+                    sectionNames.classList.remove('hidden');
+                    namesChevron.classList.remove('fa-chevron-down');
+                    namesChevron.classList.add('fa-chevron-up');
+                } else {
+                    sectionNames.classList.add('hidden');
+                    namesChevron.classList.remove('fa-chevron-up');
+                    namesChevron.classList.add('fa-chevron-down');
+                }
+            });
+
+            // Setup Start Game Click
+            btnStartGame.addEventListener('click', () => {
+                setupGame();
+            });
+        }
+
+        // Dynamically create player name fields
+        function generateNameFields() {
+            sectionNames.innerHTML = '';
+            for (let i = 1; i <= playerCount; i++) {
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-1.5 p-1";
+                div.innerHTML = `
+                    <span class="text-[10px] text-slate-500 font-bold w-4">${i}.</span>
+                    <input type="text" id="player-name-input-${i}" value="玩家 ${i}" class="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500 w-full">
+                `;
+                sectionNames.appendChild(div);
+            }
+        }
+
+        // Setup the game, prepare players, words and switch screen
+        function setupGame() {
+            // Validation
+            let civWord = "";
+            let undWord = "";
+
+            if (wordMode === 'preset') {
+                let pool = [];
+                const cat = selectCategory.value;
+                if (cat === 'all') {
+                    pool = [...wordDatabase.food, ...wordDatabase.life, ...wordDatabase.entertainment, ...wordDatabase.compare];
+                } else {
+                    pool = wordDatabase[cat];
+                }
+
+                // Random choose one pair
+                const randomIndex = Math.floor(Math.random() * pool.length);
+                const wordPair = pool[randomIndex];
+
+                // Randomly decide which is civilian and which is undercover
+                if (Math.random() > 0.5) {
+                    civWord = wordPair[0];
+                    undWord = wordPair[1];
+                } else {
+                    civWord = wordPair[1];
+                    undWord = wordPair[0];
+                }
+            } else {
+                civWord = customCivilian.value.trim();
+                undWord = customUndercover.value.trim();
+
+                if (!civWord || !undWord) {
+                    customAlert("輸入錯誤", "請輸入完整的平民與臥底詞彙！");
+                    return;
+                }
+                if (civWord === undWord) {
+                    customAlert("詞彙相同", "平民與臥底詞語不可以相同喔！");
+                    return;
+                }
+            }
+
+            currentWords = { civilian: civWord, undercover: undWord };
+
+            // Build player identity array
+            let roles = [];
+            
+            // Add Mr. White if enabled
+            let calculatedMrWhite = hasMrWhite ? 1 : 0;
+            
+            // Validate configuration
+            if (undercoverCount + calculatedMrWhite >= playerCount) {
+                customAlert("配置錯誤", "臥底與白板人數總和必須少於總人數！請減少臥底或調高玩家人數。", "error");
+                return;
+            }
+
+            // Push Roles
+            for (let i = 0; i < undercoverCount; i++) roles.push('undercover');
+            for (let i = 0; i < calculatedMrWhite; i++) roles.push('white');
+            const civilianCount = playerCount - roles.length;
+            for (let i = 0; i < civilianCount; i++) roles.push('civilian');
+
+            // Shuffle roles
+            roles = shuffle(roles);
+
+            // Construct Final Players List
+            players = [];
+            for (let i = 1; i <= playerCount; i++) {
+                const nameInput = document.getElementById(`player-name-input-${i}`);
+                const name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : `玩家 ${i}`;
+                const role = roles[i - 1];
+                
+                let word = "";
+                if (role === 'civilian') {
+                    word = civWord;
+                } else if (role === 'undercover') {
+                    word = undWord;
+                } else {
+                    word = "無字天書 (您是白板)";
+                }
+
+                players.push({
+                    id: i,
+                    name: name,
+                    word: word,
+                    role: role,
+                    alive: true
+                });
+            }
+
+            // Start distribute phase
+            currentDistributeIndex = 0;
+            switchScreen('distribute');
+            updateDistributeUI();
+        }
+
+        // Shuffle helper
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function switchScreen(screen) {
+            screenSetup.classList.add('hidden');
+            screenDistribute.classList.add('hidden');
+            screenGameBoard.classList.add('hidden');
+
+            if (screen === 'setup') {
+                screenSetup.classList.remove('hidden');
+            } else if (screen === 'distribute') {
+                screenDistribute.classList.remove('hidden');
+            } else if (screen === 'game') {
+                screenGameBoard.classList.remove('hidden');
+            }
+        }
+
+        // Step 2: Pass & Play Card Distributing UI and Handlers
+        function updateDistributeUI() {
+            const currentPlayer = players[currentDistributeIndex];
+            distributePlayerName.innerText = currentPlayer.name;
+            
+            // Set up word details
+            distributeWordDisplay.innerText = currentPlayer.word;
+            if (currentPlayer.role === 'white') {
+                distributeRoleTip.innerHTML = `⚠️ <span class="text-amber-400 font-bold">您是白板角色！</span><br>您沒有任何詞彙。請仔細聽取其他人的敘述，想辦法推測出大家在講什麼並混過去！`;
+            } else {
+                distributeRoleTip.innerHTML = `※ 您拿到的詞是 <span class="text-emerald-400 font-bold">${currentPlayer.word}</span>，描述時請小心隱藏，不要講得太明顯。`;
+            }
+
+            // Always start as Covered state
+            coverCardDirect();
+
+            // Progress Bar Update
+            const percentage = ((currentDistributeIndex) / playerCount) * 100;
+            distributeProgress.style.width = `${Math.max(5, percentage)}%`;
+        }
+
+        // Card reveal/hide actions - completely redesigned using direct opacity/transform logic
+        distributeCardArea.addEventListener('click', () => {
+            if (!cardRevealed) {
+                revealCardDirect();
+            } else {
+                coverCardDirect();
+            }
+        });
+
+        btnRevealCard.addEventListener('click', (e) => {
+            e.stopPropagation();
+            revealCardDirect();
+        });
+
+        btnHideAndNext.addEventListener('click', (e) => {
+            e.stopPropagation();
+            nextPlayerDistribute();
+        });
+
+        function revealCardDirect() {
+            cardRevealed = true;
+            
+            // Hide cover state cleanly
+            cardCoverState.classList.remove('opacity-100', 'scale-100', 'z-10');
+            cardCoverState.classList.add('opacity-0', 'scale-95', 'z-0', 'pointer-events-none');
+            
+            // Show reveal state cleanly
+            cardRevealState.classList.remove('opacity-0', 'scale-95', 'z-0', 'pointer-events-none');
+            cardRevealState.classList.add('opacity-100', 'scale-100', 'z-10');
+
+            btnRevealCard.classList.add('hidden');
+            btnHideAndNext.classList.remove('hidden');
+        }
+
+        function coverCardDirect() {
+            cardRevealed = false;
+            
+            // Show cover state cleanly
+            cardCoverState.classList.remove('opacity-0', 'scale-95', 'z-0', 'pointer-events-none');
+            cardCoverState.classList.add('opacity-100', 'scale-100', 'z-10');
+            
+            // Hide reveal state cleanly
+            cardRevealState.classList.remove('opacity-100', 'scale-100', 'z-10');
+            cardRevealState.classList.add('opacity-0', 'scale-95', 'z-0', 'pointer-events-none');
+
+            btnRevealCard.classList.remove('hidden');
+            btnHideAndNext.classList.add('hidden');
+        }
+
+        function nextPlayerDistribute() {
+            currentDistributeIndex++;
+            if (currentDistributeIndex < playerCount) {
+                updateDistributeUI();
+            } else {
+                // Distribute complete, enter board loop
+                distributeProgress.style.width = `100%`;
+                setTimeout(() => {
+                    startGameLoop();
+                }, 400);
+            }
+        }
+
+        // Step 3: Game Board Dashboard Functions
+        function startGameLoop() {
+            switchScreen('game');
+            updateGameBoardUI();
+        }
+
+        function updateGameBoardUI() {
+            // Fill Players grid
+            gameboardPlayersGrid.innerHTML = '';
+            
+            let aliveCount = 0;
+            players.forEach(p => {
+                if (p.alive) aliveCount++;
+
+                const playerCard = document.createElement('div');
+                playerCard.className = `p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between h-24 ${
+                    p.alive 
+                    ? 'bg-slate-900 border-slate-800 hover:border-purple-500/50 hover:bg-slate-800/80' 
+                    : 'bg-slate-950/80 border-slate-950/50 opacity-40 line-through text-slate-500'
+                }`;
+
+                // Click event to toggle elimination
+                playerCard.addEventListener('click', () => {
+                    togglePlayerEliminated(p.id);
+                });
+
+                playerCard.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold truncate pr-1 ${p.alive ? 'text-slate-200' : 'text-slate-500'}">${p.name}</span>
+                        <span>
+                            ${p.alive 
+                                ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">存活</span>' 
+                                : '<span class="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">淘汰</span>'
+                            }
+                        </span>
+                    </div>
+                    <div class="flex items-end justify-between mt-2">
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700/50 flex items-center justify-center text-sm font-black ${p.alive ? 'text-purple-400' : 'text-slate-500'}">
+                                ${p.id}
+                            </div>
+                        </div>
+                        <div class="text-[10px] text-slate-500 font-mono">
+                            ${p.alive ? '<i class="fa-solid fa-skull-crossbones text-slate-600 hover:text-red-400"></i>' : '<i class="fa-solid fa-heart text-slate-600 hover:text-emerald-400"></i>'}
+                        </div>
+                    </div>
+                `;
+                gameboardPlayersGrid.appendChild(playerCard);
+            });
+
+            aliveCountDisplay.innerText = aliveCount;
+            totalCountDisplay.innerText = playerCount;
+
+            // Live status Check for victory
+            checkGameVictoryCondition();
+        }
+
+        function togglePlayerEliminated(playerId) {
+            const player = players.find(p => p.id === playerId);
+            if (player) {
+                player.alive = !player.alive;
+                updateGameBoardUI();
+            }
+        }
+
+        // Check if game has met victory conditions
+        function checkGameVictoryCondition() {
+            const alivePlayers = players.filter(p => p.alive);
+            const aliveUndercovers = alivePlayers.filter(p => p.role === 'undercover');
+            const aliveWhites = alivePlayers.filter(p => p.role === 'white');
+            const aliveCivilians = alivePlayers.filter(p => p.role === 'civilian');
+
+            const totalAlive = alivePlayers.length;
+            const totalUndercoverAndWhiteCount = aliveUndercovers.length + aliveWhites.length;
+
+            // Live status text display
+            gameStatusText.innerText = `臥底:${aliveUndercovers.length} · 白板:${aliveWhites.length} · 平民:${aliveCivilians.length}`;
+
+            // 1. If all undercovers AND whites are dead => Civilians win!
+            if (totalUndercoverAndWhiteCount === 0) {
+                endGame('civilian_win');
+                return;
+            }
+
+            // 2. If alive undercovers/whites >= alive civilians => Undercovers win!
+            if (totalAlive <= 2 && totalUndercoverAndWhiteCount > 0) {
+                endGame('undercover_win');
+                return;
+            }
+            
+            // Standard general condition
+            if (totalUndercoverAndWhiteCount >= aliveCivilians.length && aliveCivilians.length > 0) {
+                endGame('undercover_win');
+                return;
+            }
+        }
+
+        // Show Game Over Modal
+        function endGame(winnerType) {
+            revealWordCivilian.innerText = currentWords.civilian;
+            revealWordUndercover.innerText = currentWords.undercover;
+
+            if (winnerType === 'civilian_win') {
+                gameOverTitle.innerText = "平民陣營獲勝！ 🎉";
+                gameOverTitle.className = "text-3xl font-black text-emerald-400";
+                gameOverSubtitle.innerText = "平民智商在線，成功抓出所有偽裝者與白板！";
+            } else if (winnerType === 'undercover_win') {
+                gameOverTitle.innerText = "臥底與白板獲勝！ 😈";
+                gameOverTitle.className = "text-3xl font-black text-pink-500";
+                gameOverSubtitle.innerText = "偽裝者演技超群，成功活到最後並顛覆全場！";
+            } else {
+                gameOverTitle.innerText = "遊戲已強制揭曉";
+                gameOverTitle.className = "text-3xl font-black text-amber-400";
+                gameOverSubtitle.innerText = "看看到底誰才是最會演的戲精？";
+            }
+
+            // Build list detail
+            gameoverRolesList.innerHTML = '';
+            players.forEach(p => {
+                let badge = "";
+                if (p.role === 'civilian') {
+                    badge = `<span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">平民</span>`;
+                } else if (p.role === 'undercover') {
+                    badge = `<span class="text-[9px] px-1.5 py-0.5 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20">臥底</span>`;
+                } else {
+                    badge = `<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">白板 (空白)</span>`;
+                }
+
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center bg-slate-950/40 p-2 rounded-lg text-xs border border-slate-900";
+                row.innerHTML = `
+                    <div class="flex items-center gap-1.5 truncate">
+                        <span class="text-slate-500 font-mono text-[10px] w-4">${p.id}</span>
+                        <span class="font-bold text-slate-200 truncate ${!p.alive ? 'line-through text-slate-500' : ''}">${p.name}</span>
+                        ${!p.alive ? '<span class="text-[9px] text-slate-600">[已淘汰]</span>' : ''}
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${badge}
+                        <span class="text-[11px] font-bold text-indigo-300 font-mono">${p.word}</span>
+                    </div>
+                `;
+                gameoverRolesList.appendChild(row);
+            });
+
+            modalGameOver.classList.remove('hidden');
+        }
+
+        // Direct reveal all button
+        btnShowWordsEnd.addEventListener('click', () => {
+            endGame('manual_reveal');
+        });
+
+        // Restart from current setup
+        btnRestartFromGame.addEventListener('click', () => {
+            switchScreen('setup');
+        });
+
+        // Play again with same configuration (Repick words & shuffle)
+        btnPlayAgain.addEventListener('click', () => {
+            modalGameOver.classList.add('hidden');
+            setupGame();
+        });
+
+        btnBackSetup.addEventListener('click', () => {
+            modalGameOver.classList.add('hidden');
+            switchScreen('setup');
+        });
+    </script>
+</body>
+</html>
+
+```
